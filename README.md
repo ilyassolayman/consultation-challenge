@@ -34,26 +34,30 @@ Each `EligibilityRule` encapsulates a predicate (the condition), a reason string
 
 Rules are currently defined in code, which requires a deployment to change. The next step toward a full rules engine would be moving the `RULES` list out of the Java class into a database or rules repository. The evaluation pipeline itself would remain unchanged.
 
-### 3. In-Memory Storage
+### 3. No Intermediate Domain Entity
+
+`ConsultationResponse` doubles as the persisted record. A separate `Consultation` domain object (with request → entity → response mapping) was deliberately omitted for this MVP — the extra layer adds boilerplate without practical benefit at this scope. The known trade-off is that raw answer data isn't stored, so eligibility cannot be re-evaluated retroactively if rules change.
+
+### 4. In-Memory Storage
 
 Per the requirements, no persistent database is used. The data layer is simulated with:
 
 - A `Map<String, List<QuestionDto>>` in `QuestionRepository`
 - A `ConcurrentHashMap<String, ConsultationResponse>` in `ConsultationRepository`
 
-### 4. API Design Decisions
+### 5. API Design Decisions
 
 `POST /consultations` returns `201 Created` with a `Location` header pointing to the new resource. To make this meaningful, I also added a `GET /consultations/{id}` endpoint so the URL in the `Location` header actually resolves.
 
-### 5. Error Handling
+### 6. Error Handling
 
 All error responses return a structured `ErrorResponse` JSON body with `message` and `timestamp` fields, ensuring a consistent response contract for clients regardless of whether a request succeeds or fails. The `GlobalExceptionHandler` handles the exceptions and returns a friendly error message.
 
-### 6. Boolean Answer Values
+### 7. Boolean Answer Values
 
 Boolean was used for simplicity given all MVP questions are yes/no. The known limitation is extensibility. If future products require multi-select, numeric, or free-text answers, the production upgrade path would cater for this typed DTO subclasses.
 
-### 7. AI Tooling
+### 8. AI Tooling
 
 AI was used as a productivity aid for boilerplate and scaffolding. All architectural decisions, trade-offs, and design choices are my own.
 
