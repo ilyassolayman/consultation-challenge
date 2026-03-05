@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Component
-public class ConsultationValidator {
+public class ConsultationValidator implements IConsultationValidator {
 
     private final IQuestionRepository questionRepository;
 

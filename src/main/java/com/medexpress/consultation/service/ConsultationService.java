@@ -20,11 +20,11 @@ public class ConsultationService implements IConsultationService {
 
     private final IConsultationRepository consultationRepository;
     private final Map<String, EligibilityStrategy> strategyByProductId;
-    private final ConsultationValidator consultationValidator;
+    private final IConsultationValidator consultationValidator;
 
     public ConsultationService(IConsultationRepository consultationRepository,
                                List<EligibilityStrategy> strategies,
-                               ConsultationValidator consultationValidator) {
+                               IConsultationValidator consultationValidator) {
         this.consultationRepository = consultationRepository;
         this.strategyByProductId = strategies.stream()
                 .collect(Collectors.toMap(EligibilityStrategy::getSupportedProductId, Function.identity()));
