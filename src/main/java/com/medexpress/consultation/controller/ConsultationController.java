@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
 import java.util.List;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -44,7 +45,10 @@ public class ConsultationController {
     public ResponseEntity<ConsultationResponse> submitConsultation(
             @Valid @RequestBody ConsultationRequest request) {
         ConsultationResponse response = consultationService.submitConsultation(request);
-        URI location = URI.create("/api/v1/consultations/" + response.getConsultationId());
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(response.getConsultationId())
+                .toUri();
         return ResponseEntity.created(location).body(response);
     }
 
