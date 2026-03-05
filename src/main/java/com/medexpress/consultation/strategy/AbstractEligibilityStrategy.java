@@ -18,7 +18,7 @@ public abstract class AbstractEligibilityStrategy implements EligibilityStrategy
     @Override
     public ConsultationResponse evaluate(ConsultationRequest request) {
         Map<String, Boolean> answers = request.getAnswers().stream()
-                .collect(Collectors.toMap(AnswerDto::getQuestionId, AnswerDto::getValue));
+                .collect(Collectors.toMap(a -> a.getQuestionId().toLowerCase(), AnswerDto::getValue));
 
         List<EligibilityRule> matchedRules = getRules().stream()
                 .filter(rule -> rule.fires(answers))

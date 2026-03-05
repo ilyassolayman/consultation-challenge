@@ -2,7 +2,7 @@ package com.medexpress.consultation.controller;
 
 import com.medexpress.consultation.dto.ErrorResponse;
 import com.medexpress.consultation.exception.ConsultationNotFoundException;
-import com.medexpress.consultation.exception.ConsultationsNotFoundException;
+import com.medexpress.consultation.exception.InvalidConsultationRequestException;
 import com.medexpress.consultation.exception.ProductNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -38,6 +38,17 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(404).body(
                 ErrorResponse.builder()
                         .message(ex.getMessage())
+                        .timestamp(Instant.now())
+                        .build());
+    }
+
+    @ExceptionHandler(InvalidConsultationRequestException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidConsultationRequest(InvalidConsultationRequestException ex) {
+        log.warn("Consultation request validation failed: {}", ex.getErrors());
+        return ResponseEntity.badRequest().body(
+                ErrorResponse.builder()
+                        .message(ex.getMessage())
+                        .errors(ex.getErrors())
                         .timestamp(Instant.now())
                         .build());
     }

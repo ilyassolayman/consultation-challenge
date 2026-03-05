@@ -33,12 +33,15 @@ class ConsultationServiceTest {
     @Mock
     private EligibilityStrategy strategy;
 
+    @Mock
+    private ConsultationValidator consultationValidator;
+
     private ConsultationService service;
 
     @BeforeEach
     void setUp() {
         when(strategy.getSupportedProductId()).thenReturn("pear-allergy-med");
-        service = new ConsultationService(consultationRepository, List.of(strategy));
+        service = new ConsultationService(consultationRepository, List.of(strategy), consultationValidator);
     }
 
     // --- getConsultation ---

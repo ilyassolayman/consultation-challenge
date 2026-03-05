@@ -242,3 +242,117 @@ curl -s http://localhost:8080/api/v1/does-not-exist | jq
 ```
 
 **Expected:** `404 Not Found` with `message: "The requested endpoint does not exist"`.
+
+---
+
+## Question ID Validation Tests
+
+### 14. Duplicate question IDs → 400
+
+Submits a consultation where `q1` appears twice. Verifies the validator catches the duplicate and reports the affected ID.
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/consultations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": "pear-allergy-med",
+    "customerId": "user-123",
+    "answers": [
+      { "questionId": "q1", "value": false },
+      { "questionId": "q1", "value": true },
+      { "questionId": "q2", "value": false },
+      { "questionId": "q3", "value": false }
+    ]
+  }' | jq
+```
+
+**Expected:** `400 Bad Request` with an `errors` array containing one entry with `code: "DUPLICATE_QUESTION_IDS"` and `questionIds: ["q1"]`.
+
+---
+
+### 15. Unknown question ID → 400
+
+Submits a consultation with `q99`, which is not a valid question for `pear-allergy-med`. Verifies the validator rejects the unknown ID.
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/consultations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": "pear-allergy-med",
+    "customerId": "user-123",
+    "answers": [
+      { "questionId": "q1", "value": false },
+      { "questionId": "q2", "value": false },
+      { "questionId": "q3", "value": false },
+      { "questionId": "q99", "value": false }
+    ]
+  }' | jq
+```
+
+**Expected:** `400 Bad Request` with an `errors` array containing one entry with `code: "UNKNOWN_QUESTION_IDS"` and `questionIds: ["q99"]`.
+
+---
+
+### 16. Missing required question ID → 400
+
+Submits a consultation without an answer for `q3`. Verifies the validator rejects the incomplete submission.
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/consultations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": "pear-allergy-med",
+    "customerId": "user-123",
+    "answers": [
+      { "questionId": "q1", "value": false },
+      { "questionId": "q2", "value": false }
+    ]
+  }' | jq
+```
+
+**Expected:** `400 Bad Request` with an `errors` array containing one entry with `code: "MISSING_REQUIRED_QUESTION_IDS"` and `questionIds: ["q3"]`.
+
+---
+
+### 17. Multiple violations reported together → 400
+
+Submits a consultation with a duplicate `q1`, an unknown `q99`, and no answer for `q3`. Verifies all three violations are reported in a single response rather than failing on the first.
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/consultations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": "pear-allergy-med",
+    "customerId": "user-123",
+    "answers": [
+      { "questionId": "q1", "value": false },
+      { "questionId": "q1", "value": true },
+      { "questionId": "q2", "value": false },
+      { "questionId": "q99", "value": false }
+    ]
+  }' | jq
+```
+
+**Expected:** `400 Bad Request` with an `errors` array containing three entries with codes `"DUPLICATE_QUESTION_IDS"`, `"UNKNOWN_QUESTION_IDS"`, and `"MISSING_REQUIRED_QUESTION_IDS"`.
+
+---
+
+### 18. Mixed-case question IDs accepted → 201
+
+Submits a consultation using uppercase question IDs (`Q1`, `Q2`, `Q3`). Verifies the API treats question IDs as case-insensitive.
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/consultations \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": "pear-allergy-med",
+    "customerId": "user-123",
+    "answers": [
+      { "questionId": "Q1", "value": false },
+      { "questionId": "Q2", "value": false },
+      { "questionId": "Q3", "value": false }
+    ]
+  }' | jq
+```
+
+**Expected:** `201 Created` with `eligible: true` and `status: "APPROVED"`.

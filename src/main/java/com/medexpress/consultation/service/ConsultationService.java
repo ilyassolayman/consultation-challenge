@@ -20,12 +20,15 @@ public class ConsultationService implements IConsultationService {
 
     private final IConsultationRepository consultationRepository;
     private final Map<String, EligibilityStrategy> strategyByProductId;
+    private final ConsultationValidator consultationValidator;
 
     public ConsultationService(IConsultationRepository consultationRepository,
-                               List<EligibilityStrategy> strategies) {
+                               List<EligibilityStrategy> strategies,
+                               ConsultationValidator consultationValidator) {
         this.consultationRepository = consultationRepository;
         this.strategyByProductId = strategies.stream()
                 .collect(Collectors.toMap(EligibilityStrategy::getSupportedProductId, Function.identity()));
+        this.consultationValidator = consultationValidator;
     }
 
     @Override
@@ -42,6 +45,7 @@ public class ConsultationService implements IConsultationService {
         if (strategy == null) {
             throw new ProductNotFoundException(request.getProductId());
         }
+        consultationValidator.validate(request);
         ConsultationResponse response = strategy.evaluate(request);
         consultationRepository.save(response);
         log.info("Consultation submitted: consultationId={}, productId={}, customerId={}, eligible={}",

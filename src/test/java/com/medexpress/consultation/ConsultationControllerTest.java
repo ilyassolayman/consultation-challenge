@@ -239,6 +239,119 @@ class ConsultationControllerTest {
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 
+    // --- POST /consultations: question ID validation ---
+
+    @Test
+    void submitConsultation_withDuplicateQuestionId_returnsBadRequest() throws Exception {
+        String payload = """
+                {
+                  "productId": "pear-allergy-med",
+                  "customerId": "user-123",
+                  "answers": [
+                    { "questionId": "q1", "value": false },
+                    { "questionId": "q1", "value": true },
+                    { "questionId": "q2", "value": false },
+                    { "questionId": "q3", "value": false }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/consultations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].code").value("DUPLICATE_QUESTION_IDS"))
+                .andExpect(jsonPath("$.errors[0].questionIds[0]").value("q1"));
+    }
+
+    @Test
+    void submitConsultation_withUnknownQuestionId_returnsBadRequest() throws Exception {
+        String payload = """
+                {
+                  "productId": "pear-allergy-med",
+                  "customerId": "user-123",
+                  "answers": [
+                    { "questionId": "q1", "value": false },
+                    { "questionId": "q2", "value": false },
+                    { "questionId": "q99", "value": false }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/consultations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].code").value("UNKNOWN_QUESTION_IDS"))
+                .andExpect(jsonPath("$.errors[0].questionIds[0]").value("q99"));
+    }
+
+    @Test
+    void submitConsultation_withMissingQuestionId_returnsBadRequest() throws Exception {
+        String payload = """
+                {
+                  "productId": "pear-allergy-med",
+                  "customerId": "user-123",
+                  "answers": [
+                    { "questionId": "q1", "value": false },
+                    { "questionId": "q2", "value": false }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/consultations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0].code").value("MISSING_REQUIRED_QUESTION_IDS"))
+                .andExpect(jsonPath("$.errors[0].questionIds[0]").value("q3"));
+    }
+
+    @Test
+    void submitConsultation_withMultipleViolations_reportsAllErrors() throws Exception {
+        String payload = """
+                {
+                  "productId": "pear-allergy-med",
+                  "customerId": "user-123",
+                  "answers": [
+                    { "questionId": "q1", "value": false },
+                    { "questionId": "q1", "value": true },
+                    { "questionId": "q99", "value": false }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/consultations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.length()").value(3))
+                .andExpect(jsonPath("$.errors[0].code").value("DUPLICATE_QUESTION_IDS"))
+                .andExpect(jsonPath("$.errors[1].code").value("UNKNOWN_QUESTION_IDS"))
+                .andExpect(jsonPath("$.errors[2].code").value("MISSING_REQUIRED_QUESTION_IDS"));
+    }
+
+    @Test
+    void submitConsultation_withMixedCaseQuestionIds_returnsCreated() throws Exception {
+        String payload = """
+                {
+                  "productId": "pear-allergy-med",
+                  "customerId": "user-123",
+                  "answers": [
+                    { "questionId": "Q1", "value": false },
+                    { "questionId": "Q2", "value": false },
+                    { "questionId": "Q3", "value": false }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/consultations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.eligible").value(true));
+    }
+
     // --- POST /consultations: unknown product ---
 
     @Test
