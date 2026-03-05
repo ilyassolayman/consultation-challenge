@@ -51,6 +51,6 @@ class QuestionServiceTest {
                 () -> service.getQuestions("unknown-product")
         );
 
-        assertEquals("Product not found: unknown-product", ex.getMessage());
+        assertEquals("Product not found for productId: unknown-product", ex.getMessage());
     }
 }

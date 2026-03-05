@@ -63,7 +63,7 @@ class GlobalExceptionHandlerTest {
                 new ProductNotFoundException("unknown-product"));
 
         assertNotNull(response.getBody());
-        assertEquals("Product not found: unknown-product", response.getBody().getMessage());
+        assertEquals("Product not found for productId: unknown-product", response.getBody().getMessage());
     }
 
     @Test

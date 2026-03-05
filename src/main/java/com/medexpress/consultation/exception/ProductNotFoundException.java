@@ -3,6 +3,6 @@ package com.medexpress.consultation.exception;
 public class ProductNotFoundException extends RuntimeException {
 
     public ProductNotFoundException(String productId) {
-        super("Product not found: " + productId);
+        super("Product not found for productId: " + productId);
     }
 }

@@ -370,7 +370,7 @@ class ConsultationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(payload))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Product not found: unknown-product"))
+                .andExpect(jsonPath("$.message").value("Product not found for productId: unknown-product"))
                 .andExpect(jsonPath("$.timestamp").isNotEmpty());
     }
 }

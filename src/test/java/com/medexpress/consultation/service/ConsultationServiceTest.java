@@ -65,7 +65,7 @@ class ConsultationServiceTest {
                 () -> service.getConsultation("unknown-id")
         );
 
-        assertEquals("Consultation not found: unknown-id", ex.getMessage());
+        assertEquals("Consultation not found for consultationId: unknown-id", ex.getMessage());
     }
 
     // --- submitConsultation: routing ---
@@ -90,7 +90,7 @@ class ConsultationServiceTest {
                 () -> service.submitConsultation(request)
         );
 
-        assertEquals("Product not found: unknown-product", ex.getMessage());
+        assertEquals("Product not found for productId: unknown-product", ex.getMessage());
         verifyNoInteractions(consultationRepository);
     }
 
